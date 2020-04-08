@@ -1,0 +1,14 @@
+show
+insert_key 16
+remove_key 5
+remove_any_by_number_of_participants 1
+some_unknown_command
+remove_lower_key 4
+info
+help
+some_other_unknown_command
+update_id 6
+show
+save
+clear
+history
