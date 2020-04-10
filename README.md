@@ -7,7 +7,7 @@ Java labs are done using **IntelliJ IDEA** by *JetBrains*.
   - Pokemon lab - 9.9/10 points;
   - Text model lab 1 - 9/10 points;
   - Text model lab 2 - 9/10 points.
-  - Collection managment application - TBD
+  - Collection managment application - TBD (BUG FIXING IN PROCESS, 1/7 DONE)
 
 Tasks can be found at https://se.ifmo.ru/courses/programming (there are different variants, so you probably won't find exactly my tasks).
 
