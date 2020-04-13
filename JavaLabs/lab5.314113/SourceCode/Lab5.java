@@ -1,5 +1,7 @@
 import MyExceptions.*;
 import com.alibaba.fastjson.*;
+
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,37 +11,48 @@ import java.util.Scanner;
 
 /**
  * Главный класс. Реализует систему управления коллекцией объектов.
+ *
  * @author Чапкий Александр Юрьевич, 285677, группа R3141
  * @version 1.0
  */
 public class Lab5 {
-    /** Поле сдвига. Необходимо для ведения истории команд.*/
+    /**
+     * Поле сдвига. Необходимо для ведения истории команд.
+     */
     public static int shift = 13;
-    /** Массив, содержащий в себе последние 14 команд.*/
+    /**
+     * Массив, содержащий в себе последние 14 команд.
+     */
     public static String[] hist = new String[14];
-    /** Коллекция, которой управляет данное приложение.*/
+    /**
+     * Коллекция, которой управляет данное приложение.
+     */
     public static Hashtable<Integer, MusicBand> collection = new Hashtable<Integer, MusicBand>();
-    /** Поле, содержащее дату инициализации коллекции.*/
+    /**
+     * Поле, содержащее дату инициализации коллекции.
+     */
     public static LocalDate initDate = LocalDate.now();
+
     /**
      * Метод, отвечающий за заполнение коллекции из файла.
+     *
      * @param path Содержит в себе путь к файлу, из которого необходимо заполнить коллекцию.
      * @throws IOException Исключение выбрасывается в случае ошибки чтения файла, например, когда файла не существует.
      * @throws ArrayIndexOutOfBoundsException Исключение выбрасывается в случае, если не указан аргумент командной строки при запуске программы.
      */
-    public static void completeCollection(String path) throws IOException, ArrayIndexOutOfBoundsException{
+    public static void completeCollection(String path) throws IOException, ArrayIndexOutOfBoundsException, NullPointerException {
         Path p = Paths.get(path);
         Scanner reader = new Scanner(p);
         int i = 1;
-        while (reader.hasNextLine()){
+        while (reader.hasNextLine()) {
             String jsonOb = reader.nextLine();
-            try{
+            try {
                 MusicBand tmp = JSON.parseObject(jsonOb, MusicBand.class);
                 tmp.setId(i);
                 tmp.setCreationDate(LocalDate.now());
-                collection.put(i,tmp);
-            } catch (JSONException e){
-                System.out.println("Ошибка чтения данных, строка №"+i);
+                collection.put(i, tmp);
+            } catch (JSONException e) {
+                System.out.println("Ошибка чтения данных, строка №" + i);
                 System.out.println("");
             }
             i++;
@@ -53,131 +66,176 @@ public class Lab5 {
     public static void main(String[] args) {
         try {
             completeCollection(args[0]);
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             System.out.println("Ошибка чтения файла.");
             System.out.println("");
-        } catch (ArrayIndexOutOfBoundsException e){
+        } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Файл не указан.");
             System.out.println("");
         }
         Scanner sc = new Scanner(System.in);
-        while (true){
+        String cmd = "";
+        while (true) {
             System.out.println("Введите команду:");
             System.out.print("> ");
-            String cmd = sc.next();
-            String arg = null;
+            try {
+                cmd = sc.nextLine();
+            } catch (java.util.NoSuchElementException e) {
+                Command.exit();
+            }
+            String[] cmdSplit = cmd.split(" ");
+            String arg = "";
+            if (cmdSplit.length > 1) {
+                arg = cmdSplit[cmdSplit.length - 1];
+            }
             if (shift == -1) {
-                for (int i = 13; i>0; i--)
-                {
-                    hist[i]=hist[i-1];
+                for (int i = 13; i > 0; i--) {
+                    hist[i] = hist[i - 1];
                 }
-                hist[0] = cmd;
+                hist[0] = cmdSplit[0];
             } else {
-                hist[shift] = cmd;
+                hist[shift] = cmdSplit[0];
                 shift--;
             }
-            switch (cmd) {
-                case "help": Command.help(); break;
-                case "info": Command.info(); break;
-                case "show": try {
-                    Command.show();
-                } catch (EmptyCollectionException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
+            try {
+                switch (cmdSplit[0]) {
+                    case "help":
+                        Command.help();
+                        break;
+                    case "info":
+                        Command.info();
+                        break;
+                    case "show":
+                        try {
+                            Command.show();
+                        } catch (EmptyCollectionException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        }
+                        break;
+                    case "insert_key":
+                        try {
+                            Command.insertKey(arg);
+                        } catch (ElementAlreadyExistsException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        } catch (FileNotFoundException e) {
+                            System.out.println("Ошибка чтения данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "update_id":
+                        try {
+                            Command.updateId(arg);
+                        } catch (NoSuchElementException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        } catch (FileNotFoundException e) {
+                            System.out.println("Ошибка чтения данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "remove_key":
+                        try {
+                            Command.removeKey(arg);
+                        } catch (NoSuchElementException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "clear":
+                        try {
+                            Command.clear();
+                        } catch (EmptyCollectionException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        }
+                        break;
+                    case "save":
+                        try {
+                            Command.save();
+                        } catch (UnableToCreateFileException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        } catch (IOException e) {
+                            System.out.println("Ошибка записи данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "execute_script":
+                        try {
+                            Command.executeScript(arg);
+                        } catch (IOException e) {
+                            System.out.println("Ошибка чтения файла.");
+                            System.out.println("");
+                        } catch (ScriptLoopException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        }
+                        break;
+                    case "exit":
+                        Command.exit();
+                        break;
+                    case "history":
+                        Command.history();
+                        break;
+                    case "replace_if_lower":
+                        try {
+                            Command.replaceIfLower(arg);
+                        } catch (NoSuchElementException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        } catch (FileNotFoundException e) {
+                            System.out.println("Ошибка чтения данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "remove_lower_key":
+                        try {
+                            Command.removeLowerKey(arg);
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "remove_any_by_number_of_participants":
+                        try {
+                            Command.removeAnyByNumberOfParticipants(arg);
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "filter_starts_with_name":
+                        Command.filterStartsWithName(arg);
+                        break;
+                    case "print_field_descending_number_of_participants":
+                        try {
+                            Command.printFieldDescendingNumberOfParticipants();
+                        } catch (EmptyCollectionException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        }
+                        break;
+                    default:
+                        System.out.println("Неизвестная команда. Для справки введите команду help.");
+                        System.out.println("");
+                        break;
                 }
-                    break;
-                case "insert_key": arg = sc.next(); try{
-                    Command.insertKey(arg);
-                } catch (ElementAlreadyExistsException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                break;
-                case "update_id": arg = sc.next(); try{
-                    Command.updateId(arg);
-                } catch (NoSuchElementException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "remove_key": arg = sc.next(); try{
-                    Command.removeKey(arg);
-                } catch (NoSuchElementException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "clear": try {
-                    Command.clear();
-                } catch (EmptyCollectionException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                }
-                    break;
-                case "save": try {
-                    Command.save();
-                } catch (UnableToCreateFileException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                } catch (IOException e){
-                    System.out.println("Ошибка записи данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "execute_script": arg = sc.next(); try {
-                    Command.executeScript(arg);
-                } catch (IOException e) {
-                    System.out.println("Ошибка чтения файла.");
-                    System.out.println("");
-                } catch (ScriptLoopException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                }
-                    break;
-                case "exit": Command.exit(); break;
-                case "history": Command.history(); break;
-                case "replace_if_lower": arg = sc.next(); try{
-                    Command.replaceIfLower(arg);
-                } catch (NoSuchElementException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "remove_lower_key": arg = sc.next(); try {
-                    Command.removeLowerKey(arg);
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "remove_any_by_number_of_participants": arg = sc.next(); try{
-                    Command.removeAnyByNumberOfParticipants(arg);
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "filter_starts_with_name": arg = sc.next(); Command.filterStartsWithName(arg); break;
-                case "print_field_descending_number_of_participants": try{
-                    Command.printFieldDescendingNumberOfParticipants();
-                } catch (EmptyCollectionException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                }
-                    break;
-                default: System.out.println("Неизвестная команда. Для справки введите команду help."); System.out.println(""); break;
+            } catch (java.util.NoSuchElementException e) {
+                Command.exit();
             }
         }
     }

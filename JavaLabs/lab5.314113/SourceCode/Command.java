@@ -12,10 +12,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Данный класс реализует методы консольных команд данного приложения.
  */
 public class Command {
+    private static File ef;
+    private static boolean execFlag;
+    private static Scanner sc;
+    private static int skipCount;
     /**
      * Данный метод вызывается при вводе команды help и показывает все доступные команды.
      */
     public static void help(){
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         System.out.println("");
         System.out.println("Данная программа запускается с аргументом, представляющим из себя путь к файлу, из которого нужно заполнить коллекцию.");
         System.out.println("В случае, если аргумент не указан, коллекция будет пустой.");
@@ -31,7 +36,7 @@ public class Command {
         System.out.println("clear: очистить коллекцию");
         System.out.println("save: сохранить коллекцию в файл");
         System.out.println("execute_script {file_name}: считать и исполнить скрипт из указанного файла. В скрипте содержатся команды в таком же виде, в котором их вводит пользователь в интерактивном режиме.");
-        System.out.println("exit: завершить программу (без сохранения в файл)");
+        System.out.println("exit: завершить программу без сохранения в файл (Комбинация клавиш CTRL+D так же завершает выполнение программы)");
         System.out.println("history: вывести последние 14 команд (без их аргументов)");
         System.out.println("replace_if_lower {element}: заменить значение по ключу, если новое значение меньше старого");
         System.out.println("remove_lower_key {key}: удалить из коллекции все элементы, ключ которых меньше, чем заданный");
@@ -47,6 +52,7 @@ public class Command {
      * Данный метод вызывается при вводе команды info и выводит информацию о коллекции.
      */
     public static void info(){
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         System.out.println("");
         System.out.println("Информация о коллекции:");
         System.out.println("Тип - Hashtable");
@@ -59,6 +65,7 @@ public class Command {
      * @throws EmptyCollectionException Исключение выбрасывается в случае, если команда вызывается при пустой коллекции.
      */
     public static void show() throws EmptyCollectionException {
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         if (Lab5.collection.size() != 0) {
             Lab5.collection.forEach((k, v) -> System.out.println(v.toString()));
         } else {
@@ -74,57 +81,79 @@ public class Command {
      * @throws ZeroException Исключение выбрасывается в случае, если получено значение 0 там, где его быть не должно.
      * @throws CoordinatesOutOfBoundsException Исключение выбрасывается, если хотя бы одна из координат выходит за допустимые границы.
      * @throws NoSuchGenreException Исключение выбрасывается в случае, если введенного пользователем жанра не существует.
+     * @throws FileNotFoundException Исключение выбрасывается в случае, если программа не может найти файл, из которого нужно считать элемент коллекции.
      */
-    public static void insertKey(String arg) throws NumberFormatException, ElementAlreadyExistsException, EmptyStringException, ZeroException, CoordinatesOutOfBoundsException, NoSuchGenreException {
+    public static void insertKey(String arg) throws NumberFormatException, ElementAlreadyExistsException, EmptyStringException, ZeroException, CoordinatesOutOfBoundsException, NoSuchGenreException, FileNotFoundException {
         int key = Integer.parseInt(arg);
         System.out.println("");
         if (Lab5.collection.get(key) != null) {
             throw new ElementAlreadyExistsException();
         } else {
-            MusicBand tmp = new MusicBand();
-            tmp.setCoordinates(new Coordinates());
-            tmp.setBestAlbum(new Album());
-            tmp.setId(key);
-            tmp.setCreationDate(LocalDate.now());
-            String tmpStr;
-            Scanner er = new Scanner(System.in);
-            System.out.println("Пожалуйста, введите данные группы, которую вы хотите добавить.");
-            System.out.print("Название: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {tmp.setName(tmpStr);}
-            System.out.print("Координата X: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= -492) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setX(Long.parseLong(tmpStr));}}
-            System.out.print("Координата Y: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) > 19) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setY(Float.parseFloat(tmpStr));}}
-            System.out.print("Количество участников: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.setNumberOfParticipants(Long.parseLong(tmpStr));}}
-            System.out.println("Далее необходимо из списка выбрать жанр.");
-            System.out.println(Arrays.toString(MusicGenre.values()));
-            System.out.print("Жанр: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {
-                tmp.setGenre(null);
+            if (key <= 0) {
+                throw new ZeroException();
             } else {
-                try {tmp.setGenre(MusicGenre.valueOf(tmpStr));} catch (IllegalArgumentException e) {throw new NoSuchGenreException();}
-            }
-            System.out.print("Название лучшего альбома: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {
-                tmp.setBestAlbum(null);
-            } else {
-                tmp.getBestAlbum().setName(tmpStr);
-                System.out.print("Количество треков в лучшем альбоме: ");
+                MusicBand tmp = new MusicBand();
+                tmp.setCoordinates(new Coordinates());
+                tmp.setBestAlbum(new Album());
+                tmp.setId(key);
+                tmp.setCreationDate(LocalDate.now());
+                String tmpStr;
+                Scanner er;
+                if (execFlag) {
+                    er = new Scanner(ef);
+                    skipCount++;
+                    for (int i = 0; i<skipCount; i++) {
+                        String skip = er.nextLine();
+                    }
+                } else {
+                    er = new Scanner(System.in);
+                }
+                System.out.println("Пожалуйста, введите данные группы, которую вы хотите добавить.");
+                System.out.print("Название: ");
                 tmpStr = er.nextLine();
-                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setTracks(Integer.parseInt(tmpStr));}}
-                System.out.print("Продажи лучшего альбома: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                if (tmpStr.split(" ").length < 1) {throw new EmptyStringException();} else {tmp.setName(tmpStr);}
+                System.out.print("Координата X: ");
                 tmpStr = er.nextLine();
-                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Float.parseFloat(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setSales(Float.parseFloat(tmpStr));}}
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= -492) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setX(Long.parseLong(tmpStr));}}
+                System.out.print("Координата Y: ");
+                tmpStr = er.nextLine();
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) > 19) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setY(Float.parseFloat(tmpStr));}}
+                System.out.print("Количество участников: ");
+                tmpStr = er.nextLine();
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.setNumberOfParticipants(Long.parseLong(tmpStr));}}
+                System.out.println("Далее необходимо из списка выбрать жанр.");
+                System.out.println(Arrays.toString(MusicGenre.values()));
+                System.out.print("Жанр: ");
+                tmpStr = er.nextLine();
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                if (tmpStr.equals("")) {
+                    tmp.setGenre(null);
+                } else {
+                    try {tmp.setGenre(MusicGenre.valueOf(tmpStr));} catch (IllegalArgumentException e) {throw new NoSuchGenreException();}
+                }
+                System.out.print("Название лучшего альбома: ");
+                tmpStr = er.nextLine();
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                if (tmpStr.split(" ").length < 1) {
+                    tmp.setBestAlbum(null);
+                } else {
+                    tmp.getBestAlbum().setName(tmpStr);
+                    System.out.print("Количество треков в лучшем альбоме: ");
+                    tmpStr = er.nextLine();
+                    if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                    if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setTracks(Integer.parseInt(tmpStr));}}
+                    System.out.print("Продажи лучшего альбома: ");
+                    tmpStr = er.nextLine();
+                    if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                    if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Float.parseFloat(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setSales(Float.parseFloat(tmpStr));}}
+                }
+                Lab5.collection.put(key,tmp);
+                System.out.println("");
             }
-            Lab5.collection.put(key,tmp);
-            System.out.println("");
         }
     }
     /**
@@ -136,57 +165,80 @@ public class Command {
      * @throws ZeroException Исключение выбрасывается в случае, если получено значение 0 там, где его быть не должно.
      * @throws CoordinatesOutOfBoundsException Исключение выбрасывается, если хотя бы одна из координат выходит за допустимые границы.
      * @throws NoSuchGenreException Исключение выбрасывается в случае, если введенного пользователем жанра не существует.
+     * @throws FileNotFoundException Исключение выбрасывается в случае, если программа не может найти файл, из которого нужно считать элемент коллекции.
      */
-    public static void updateId(String arg) throws NumberFormatException, NoSuchElementException, EmptyStringException, ZeroException, CoordinatesOutOfBoundsException, NoSuchGenreException {
+    public static void updateId(String arg) throws NumberFormatException, NoSuchElementException, EmptyStringException, ZeroException, CoordinatesOutOfBoundsException, NoSuchGenreException, FileNotFoundException {
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         int key = Integer.parseInt(arg);
         System.out.println("");
         if (Lab5.collection.get(key) == null) {
             throw new NoSuchElementException();
         } else {
-            MusicBand tmp = new MusicBand();
-            tmp.setCoordinates(new Coordinates());
-            tmp.setBestAlbum(new Album());
-            tmp.setId(key);
-            tmp.setCreationDate(LocalDate.now());
-            String tmpStr;
-            Scanner er = new Scanner(System.in);
-            System.out.println("Пожалуйста, введите данные группы, которую вы хотите вписать на это место.");
-            System.out.print("Название: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {tmp.setName(tmpStr);}
-            System.out.print("Координата X: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= -492) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setX(Long.parseLong(tmpStr));}}
-            System.out.print("Координата Y: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) > 19) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setY(Float.parseFloat(tmpStr));}}
-            System.out.print("Количество участников: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.setNumberOfParticipants(Long.parseLong(tmpStr));}}
-            System.out.println("Далее необходимо из списка выбрать жанр.");
-            System.out.println(Arrays.toString(MusicGenre.values()));
-            System.out.print("Жанр: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {
-                tmp.setGenre(null);
+            if (key <= 0) {
+                throw new ZeroException();
             } else {
-                try {tmp.setGenre(MusicGenre.valueOf(tmpStr));} catch (IllegalArgumentException e) {throw new NoSuchGenreException();}
-            }
-            System.out.print("Название лучшего альбома: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {
-                tmp.setBestAlbum(null);
-            } else {
-                tmp.getBestAlbum().setName(tmpStr);
-                System.out.print("Количество треков в лучшем альбоме: ");
+                MusicBand tmp = new MusicBand();
+                tmp.setCoordinates(new Coordinates());
+                tmp.setBestAlbum(new Album());
+                tmp.setId(key);
+                tmp.setCreationDate(LocalDate.now());
+                String tmpStr;
+                Scanner er;
+                if (execFlag) {
+                    er = new Scanner(ef);
+                    skipCount++;
+                    for (int i = 0; i<skipCount; i++) {
+                        String skip = er.nextLine();
+                    }
+                } else {
+                    er = new Scanner(System.in);
+                }
+                System.out.println("Пожалуйста, введите данные группы, которую вы хотите вписать на это место.");
+                System.out.print("Название: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
                 tmpStr = er.nextLine();
-                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setTracks(Integer.parseInt(tmpStr));}}
-                System.out.print("Продажи лучшего альбома: ");
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {tmp.setName(tmpStr); skipCount++;}
+                System.out.print("Координата X: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
                 tmpStr = er.nextLine();
-                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Float.parseFloat(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setSales(Float.parseFloat(tmpStr));}}
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= -492) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setX(Long.parseLong(tmpStr));}}
+                System.out.print("Координата Y: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                tmpStr = er.nextLine();
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) > 19) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setY(Float.parseFloat(tmpStr));}}
+                System.out.print("Количество участников: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                tmpStr = er.nextLine();
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.setNumberOfParticipants(Long.parseLong(tmpStr));}}
+                System.out.println("Далее необходимо из списка выбрать жанр.");
+                System.out.println(Arrays.toString(MusicGenre.values()));
+                System.out.print("Жанр: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                tmpStr = er.nextLine();
+                if (tmpStr.equals("")) {
+                    tmp.setGenre(null);
+                } else {
+                    try {tmp.setGenre(MusicGenre.valueOf(tmpStr));} catch (IllegalArgumentException e) {throw new NoSuchGenreException();}
+                }
+                System.out.print("Название лучшего альбома: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                tmpStr = er.nextLine();
+                if (tmpStr.equals("")) {
+                    tmp.setBestAlbum(null);
+                } else {
+                    tmp.getBestAlbum().setName(tmpStr);
+                    System.out.print("Количество треков в лучшем альбоме: ");
+                    if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                    tmpStr = er.nextLine();
+                    if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setTracks(Integer.parseInt(tmpStr));}}
+                    System.out.print("Продажи лучшего альбома: ");
+                    if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                    tmpStr = er.nextLine();
+                    if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Float.parseFloat(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setSales(Float.parseFloat(tmpStr));}}
+                }
+                Lab5.collection.put(key,tmp);
+                System.out.println("");
             }
-            Lab5.collection.put(key,tmp);
-            System.out.println("");
         }
     }
     /**
@@ -196,6 +248,7 @@ public class Command {
      * @throws NoSuchElementException Исключение выбрасывается в случае, если элемента с указанным в качестве аргумента ключом не существует.
      */
     public static void removeKey(String arg) throws NumberFormatException, NoSuchElementException{
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         int key = Integer.parseInt(arg);
         System.out.println("");
         if (Lab5.collection.get(key) == null) {
@@ -211,6 +264,7 @@ public class Command {
      * @throws EmptyCollectionException Исключение выбрасывается в случае, если команда вызывается при пустой коллекции.
      */
     public static void clear() throws EmptyCollectionException {
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         System.out.println("");
         if (Lab5.collection.size() == 0) {
             throw new EmptyCollectionException();
@@ -226,6 +280,7 @@ public class Command {
      * @throws UnableToCreateFileException Исключение выбрасывается в случае невозможности создать файл для сохранения, например, нет прав доступа.
      */
     public static void save() throws IOException, UnableToCreateFileException {
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         System.out.println("");
         File sf = new File("collectionOutput.json");
         AtomicBoolean saveFlag = new AtomicBoolean(true);
@@ -296,135 +351,190 @@ public class Command {
      * @throws IOException Исключение выбрасывается в случае ошибки чтения файла, например, когда файла не существует.
      * @throws ScriptLoopException Исключение выбрасывается в случае, если скрипт содержит команду для выполнения самого себя.
      */
-    public static void executeScript(String path) throws IOException, ScriptLoopException {
+    public static void executeScript(String path) throws IOException, ScriptLoopException{
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+        execFlag = true;
         System.out.println("");
-        File ef = new File(path);
-        Scanner exec = new Scanner(ef);
-        while (exec.hasNext()) {
-            String cmd = exec.next();
-            String arg = null;
+        ef = new File(path);
+        sc = new Scanner(ef);
+        String cmd = "";
+        while (sc.hasNext()) {
+            try {
+                cmd = sc.nextLine();
+            } catch (java.util.NoSuchElementException e) {
+                Command.exit();
+            }
+            String[] cmdSplit = cmd.split(" ");
+            String arg = "";
+            if (cmdSplit.length > 1) {
+                arg = cmdSplit[cmdSplit.length - 1];
+            }
             if (Lab5.shift == -1) {
-                for (int i = 13; i>0; i--)
-                {
-                    Lab5.hist[i] = Lab5.hist[i-1];
+                for (int i = 13; i > 0; i--) {
+                    Lab5.hist[i] = Lab5.hist[i - 1];
                 }
-                Lab5.hist[0] = cmd;
+                Lab5.hist[0] = cmdSplit[0];
             } else {
-                Lab5.hist[Lab5.shift] = cmd;
+                Lab5.hist[Lab5.shift] = cmdSplit[0];
                 Lab5.shift--;
             }
-            switch (cmd) {
-                case "help": Command.help(); break;
-                case "info": Command.info(); break;
-                case "show": try {
-                    Command.show();
-                } catch (EmptyCollectionException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
+            try {
+                switch (cmdSplit[0]) {
+                    case "help":
+                        Command.help();
+                        break;
+                    case "info":
+                        Command.info();
+                        break;
+                    case "show":
+                        try {
+                            Command.show();
+                        } catch (EmptyCollectionException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        }
+                        break;
+                    case "insert_key":
+                        try {
+                            Command.insertKey(arg);
+                        } catch (ElementAlreadyExistsException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        } catch (FileNotFoundException e) {
+                            System.out.println("Ошибка чтения данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "update_id":
+                        try {
+                            Command.updateId(arg);
+                        } catch (NoSuchElementException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        } catch (FileNotFoundException e) {
+                            System.out.println("Ошибка чтения данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "remove_key":
+                        try {
+                            Command.removeKey(arg);
+                        } catch (NoSuchElementException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "clear":
+                        try {
+                            Command.clear();
+                        } catch (EmptyCollectionException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        }
+                        break;
+                    case "save":
+                        try {
+                            Command.save();
+                        } catch (UnableToCreateFileException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        } catch (IOException e) {
+                            System.out.println("Ошибка записи данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "execute_script":
+                        if (arg.equals(ef.getName())) {throw new ScriptLoopException();}
+                        try {
+                            Command.executeScript(arg);
+                        } catch (IOException e) {
+                            System.out.println("Ошибка чтения файла.");
+                            System.out.println("");
+                        } catch (ScriptLoopException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        }
+                        break;
+                    case "exit":
+                        Command.exit();
+                        break;
+                    case "history":
+                        Command.history();
+                        break;
+                    case "replace_if_lower":
+                        try {
+                            Command.replaceIfLower(arg);
+                        } catch (NoSuchElementException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        } catch (FileNotFoundException e) {
+                            System.out.println("Ошибка чтения данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "remove_lower_key":
+                        try {
+                            Command.removeLowerKey(arg);
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "remove_any_by_number_of_participants":
+                        try {
+                            Command.removeAnyByNumberOfParticipants(arg);
+                        } catch (NumberFormatException e) {
+                            System.out.println("Ошибка ввода данных.");
+                            System.out.println("");
+                        }
+                        break;
+                    case "filter_starts_with_name":
+                        Command.filterStartsWithName(arg);
+                        break;
+                    case "print_field_descending_number_of_participants":
+                        try {
+                            Command.printFieldDescendingNumberOfParticipants();
+                        } catch (EmptyCollectionException e) {
+                            System.out.println(e.getMessage());
+                            System.out.println("");
+                        }
+                        break;
+                    default:
+                        System.out.println("Неизвестная команда. Для справки введите команду help.");
+                        System.out.println("");
+                        break;
                 }
-                    break;
-                case "insert_key": arg = exec.next(); try{
-                    Command.insertKey(arg);
-                } catch (ElementAlreadyExistsException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "update_id": arg = exec.next(); try{
-                    Command.updateId(arg);
-                } catch (NoSuchElementException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "remove_key": arg = exec.next(); try{
-                    Command.removeKey(arg);
-                } catch (NoSuchElementException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "clear": try {
-                    Command.clear();
-                } catch (EmptyCollectionException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                }
-                    break;
-                case "save": try {
-                    Command.save();
-                } catch (UnableToCreateFileException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                } catch (IOException e){
-                    System.out.println("Ошибка записи данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "execute_script": arg = exec.next();
-                if (arg.equals(ef.getName())) {throw new ScriptLoopException();}
-                try {
-                    Command.executeScript(arg);
-                } catch (IOException e) {
-                    System.out.println("Ошибка чтения файла.");
-                    System.out.println("");
-                } catch (ScriptLoopException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                }
-                    break;
-                case "exit": Command.exit(); break;
-                case "history": Command.history(); break;
-                case "replace_if_lower": arg = exec.next(); try{
-                    Command.replaceIfLower(arg);
-                } catch (NoSuchElementException | CoordinatesOutOfBoundsException | ZeroException | EmptyStringException | NoSuchGenreException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "remove_lower_key": arg = exec.next(); try {
-                    Command.removeLowerKey(arg);
-                } catch (NumberFormatException e) {
-                    System.out.println("Ошибка ввода данных.");
-                    System.out.println("");
-                }
-                    break;
-                case "remove_any_by_number_of_participants": arg = exec.next(); Command.removeAnyByNumberOfParticipants(arg); break;
-                case "filter_starts_with_name": arg = exec.next(); Command.filterStartsWithName(arg); break;
-                case "print_field_descending_number_of_participants": try{
-                    Command.printFieldDescendingNumberOfParticipants();
-                    System.out.println("");
-                } catch (EmptyCollectionException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("");
-                }
-                    break;
-                default: System.out.println("Неизвестная команда. Для справки введите команду help."); System.out.println(""); break;
+            } catch (java.util.NoSuchElementException e) {
+                Command.exit();
             }
         }
+        execFlag = false;
     }
     /**
      * Данный метод вызывается при вводе команды exit и завершает выполнение программы.
      */
     public static void exit(){
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+        System.out.println("Завершение работы программы.");
         System.exit(1723);
     }
     /**
      * Данный метод вызывается при вводе команды history и выводит на экран последние 14 команд (без их аргументов).
      */
     public static void history(){
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         System.out.println("");
         for (int j = 13; j>=0; j--) {
             if (Lab5.hist[j] != null) {
@@ -442,62 +552,84 @@ public class Command {
      * @throws ZeroException Исключение выбрасывается в случае, если получено значение 0 там, где его быть не должно.
      * @throws CoordinatesOutOfBoundsException Исключение выбрасывается, если хотя бы одна из координат выходит за допустимые границы.
      * @throws NoSuchGenreException Исключение выбрасывается в случае, если введенного пользователем жанра не существует.
+     * @throws FileNotFoundException Исключение выбрасывается в случае, если программа не может найти файл, из которого нужно считать элемент коллекции.
      */
-    public static void replaceIfLower(String arg) throws NumberFormatException, NoSuchElementException, EmptyStringException, ZeroException, CoordinatesOutOfBoundsException, NoSuchGenreException{
+    public static void replaceIfLower(String arg) throws NumberFormatException, NoSuchElementException, EmptyStringException, ZeroException, CoordinatesOutOfBoundsException, NoSuchGenreException, FileNotFoundException {
         System.out.println("");
         int key = Integer.parseInt(arg);
         if (Lab5.collection.get(key) == null) {
             throw new NoSuchElementException();
         } else {
-            MusicBand tmp = new MusicBand();
-            tmp.setCoordinates(new Coordinates());
-            tmp.setBestAlbum(new Album());
-            tmp.setId(key);
-            tmp.setCreationDate(LocalDate.now());
-            String tmpStr;
-            Scanner er = new Scanner(System.in);
-            System.out.println("Пожалуйста, введите данные группы, которую вы хотите вписать на это место.");
-            System.out.print("Название: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {tmp.setName(tmpStr);}
-            System.out.print("Координата X: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= -492) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setX(Long.parseLong(tmpStr));}}
-            System.out.print("Координата Y: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) > 19) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setY(Float.parseFloat(tmpStr));}}
-            System.out.print("Количество участников: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.setNumberOfParticipants(Long.parseLong(tmpStr));}}
-            System.out.println("Далее необходимо из списка выбрать жанр.");
-            System.out.println(Arrays.toString(MusicGenre.values()));
-            System.out.print("Жанр: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {
-                tmp.setGenre(null);
+            if (key <= 0) {
+                throw new ZeroException();
             } else {
-                try {tmp.setGenre(MusicGenre.valueOf(tmpStr));} catch (IllegalArgumentException e) {throw new NoSuchGenreException();}
-            }
-            System.out.print("Название лучшего альбома: ");
-            tmpStr = er.nextLine();
-            if (tmpStr.equals("")) {
-                tmp.setBestAlbum(null);
-            } else {
-                tmp.getBestAlbum().setName(tmpStr);
-                System.out.print("Количество треков в лучшем альбоме: ");
+                MusicBand tmp = new MusicBand();
+                tmp.setCoordinates(new Coordinates());
+                tmp.setBestAlbum(new Album());
+                tmp.setId(key);
+                tmp.setCreationDate(LocalDate.now());
+                String tmpStr;
+                Scanner er;
+                if (execFlag) {
+                    er = new Scanner(ef);
+                    skipCount++;
+                    for (int i = 0; i<skipCount; i++) {
+                        String skip = er.nextLine();
+                    }
+                } else {
+                    er = new Scanner(System.in);
+                }
+                System.out.println("Пожалуйста, введите данные группы, которую вы хотите вписать на это место.");
+                System.out.print("Название: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
                 tmpStr = er.nextLine();
-                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setTracks(Integer.parseInt(tmpStr));}}
-                System.out.print("Продажи лучшего альбома: ");
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {tmp.setName(tmpStr);}
+                System.out.print("Координата X: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
                 tmpStr = er.nextLine();
-                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Float.parseFloat(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setSales(Float.parseFloat(tmpStr));}}
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= -492) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setX(Long.parseLong(tmpStr));}}
+                System.out.print("Координата Y: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                tmpStr = er.nextLine();
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) > 19) {throw new CoordinatesOutOfBoundsException();} else {tmp.getCoordinates().setY(Float.parseFloat(tmpStr));}}
+                System.out.print("Количество участников: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                tmpStr = er.nextLine();
+                if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.setNumberOfParticipants(Long.parseLong(tmpStr));}}
+                System.out.println("Далее необходимо из списка выбрать жанр.");
+                System.out.println(Arrays.toString(MusicGenre.values()));
+                System.out.print("Жанр: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                tmpStr = er.nextLine();
+                if (tmpStr.equals("")) {
+                    tmp.setGenre(null);
+                } else {
+                    try {tmp.setGenre(MusicGenre.valueOf(tmpStr));} catch (IllegalArgumentException e) {throw new NoSuchGenreException();}
+                }
+                System.out.print("Название лучшего альбома: ");
+                if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                tmpStr = er.nextLine();
+                if (tmpStr.equals("")) {
+                    tmp.setBestAlbum(null);
+                } else {
+                    tmp.getBestAlbum().setName(tmpStr);
+                    System.out.print("Количество треков в лучшем альбоме: ");
+                    if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                    tmpStr = er.nextLine();
+                    if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Integer.parseInt(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setTracks(Integer.parseInt(tmpStr));}}
+                    System.out.print("Продажи лучшего альбома: ");
+                    if (execFlag) {String skip = sc.nextLine(); skipCount++;}
+                    tmpStr = er.nextLine();
+                    if (tmpStr.equals("")) {throw new EmptyStringException();} else {if (Float.parseFloat(tmpStr) <= 0) {throw new ZeroException();} else {tmp.getBestAlbum().setSales(Float.parseFloat(tmpStr));}}
+                }
+                if (Lab5.collection.get(key).compareTo(tmp) > 0) {
+                    Lab5.collection.put(key, tmp);
+                    System.out.println("Замена успешно произведена.");
+                } else {
+                    System.out.println("Замена произведена не была.");
+                }
+                System.out.println("");
             }
-            if (Lab5.collection.get(key).compareTo(tmp) > 0) {
-                Lab5.collection.put(key, tmp);
-                System.out.println("Замена успешно произведена.");
-            } else {
-                System.out.println("Замена произведена не была.");
-            }
-            System.out.println("");
          }
     }
     /**
@@ -506,6 +638,7 @@ public class Command {
      * @throws NumberFormatException Исключение выбрасывается в случае, если число окажется слишком длинным или если вместо числа будут введены буквы.
      */
     public static void removeLowerKey(String arg) throws NumberFormatException{
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         System.out.println("");
         int key = Integer.parseInt(arg);
         ArrayList<Integer> delKey = new ArrayList<>();
@@ -529,6 +662,7 @@ public class Command {
      * @throws NumberFormatException Исключение выбрасывается в случае, если число окажется слишком длинным или если вместо числа будут введены буквы.
      */
     public static void removeAnyByNumberOfParticipants(String arg) throws NumberFormatException{
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         System.out.println("");
         int num = Integer.parseInt(arg);
         ArrayList<Integer> delKey = new ArrayList<>();
@@ -550,6 +684,7 @@ public class Command {
      * @param arg Аргумент команды, подстрока, с которой должны начинаться искомые элементы коллекции.
      */
     public static void filterStartsWithName(String arg){
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         System.out.println("");
         ArrayList<Integer> showKey = new ArrayList<>();
         Lab5.collection.forEach((k, v) -> {
@@ -569,6 +704,7 @@ public class Command {
      * @throws EmptyCollectionException Исключение выбрасывается в случае, если команда вызывается при пустой коллекции.
      */
     public static void printFieldDescendingNumberOfParticipants() throws EmptyCollectionException {
+        if (execFlag) {String skip = sc.nextLine(); skipCount++;}
         System.out.println("");
         if (Lab5.collection.size() == 0) {
             throw new EmptyCollectionException();
