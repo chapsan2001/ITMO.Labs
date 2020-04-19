@@ -1,0 +1,21 @@
+{
+  "initDate": "Apr 18, 2020, 3:56:45 PM",
+  "collection": {
+    "1234": {
+      "id": 1,
+      "name": "20",
+      "coordinates": {
+        "x": 10,
+        "y": 10.0
+      },
+      "creationDate": "2020-04-18",
+      "numberOfParticipants": 10,
+      "genre": "PSYCHEDELIC_CLOUD_RAP",
+      "bestAlbum": {
+        "name": "10",
+        "tracks": 20,
+        "sales": 20.0
+      }
+    }
+  }
+}
