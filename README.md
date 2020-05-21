@@ -2,7 +2,9 @@
 This repository contains my laboratory works for programming lessons at ITMO University.
 
 Java labs are done using **IntelliJ IDEA** by *JetBrains*.
+
 Points for Java labs were given mostly for theory knowledge, tecnical completion costs only 0.01 points.
+
 - Fall semester 2019
   - Maths lab - 10/10 points;
   - Pokemon lab - 9.9/10 points;
