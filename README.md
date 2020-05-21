@@ -2,13 +2,15 @@
 This repository contains my laboratory works for programming lessons at ITMO University.
 
 Java labs are done using **IntelliJ IDEA** by *JetBrains*.
-- Fall Semester 2019
+Points for Java labs were given mostly for theory knowledge, tecnical completion costs only 0.01 points.
+- Fall semester 2019
   - Maths lab - 10/10 points;
   - Pokemon lab - 9.9/10 points;
   - Text model lab 1 - 9/10 points;
   - Text model lab 2 - 9/10 points;
-  - Collection managment application - TBD;
-  - Client-server architecture lab - TBD.
+- Spring semester 2020
+  - Collection managment application - 9/10 points;
+  - Client-server architecture lab - 8/10 points.
 
 Tasks can be found at https://se.ifmo.ru/courses/programming (there are different variants, so you probably won't find exactly my tasks).
 
