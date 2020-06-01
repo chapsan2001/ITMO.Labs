@@ -9,8 +9,9 @@ Java labs are done using **IntelliJ IDEA** by *JetBrains*.
   - Text model lab 1 - 9/10 points;
   - Text model lab 2 - 9/10 points;
 - Spring semester 2020
-  - Collection managment application - 9/10 points;
-  - Client-server architecture lab - 8/10 points.
+  - Collection managment application lab - 9/10 points;
+  - Client-server architecture lab - 8/10 points;
+  - Database lab - TBD.
   
 Points for Java labs were given mostly for theory knowledge, tecnical completion costs only 0.01 points.
 
