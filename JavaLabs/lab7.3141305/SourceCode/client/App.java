@@ -13,7 +13,7 @@ public class App {
             String input;
             Client client = new Client("localhost", 8012);
             if (client.connect()) {
-                client.getOut().println("Подключение успешно.");
+                client.getOut().println("Клиент запущен.");
                 while (client.isConnected()) {
                     client.getOut().print("Введите команду: ");
                     input = new Input().readLine();

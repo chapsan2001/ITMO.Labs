@@ -2,19 +2,20 @@ package com.lab.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.lab.common.LoggerSetup;
+import com.lab.common.CommandNames;
 import com.lab.common.adapters.LocalDateDeserializer;
 import com.lab.common.adapters.LocalDateSerializer;
 import com.lab.common.exchange.Request;
 import com.lab.common.exchange.Response;
 import com.lab.common.io.Input;
 import com.lab.common.io.Output;
+import com.lab.common.user.User;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.time.LocalDate;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -22,6 +23,7 @@ import java.util.logging.Logger;
  */
 public class Client {
     private final InetSocketAddress inetSocketAddress;
+    private final User user;
     private Gson gson;
     private Input in;
     private Output out;
@@ -30,6 +32,7 @@ public class Client {
     private DatagramSocket socket;
 
     public Client(String host, int port) throws UnknownHostException {
+        user = new User();
         gson =
                 new GsonBuilder()
                         .registerTypeAdapter(LocalDate.class, new LocalDateSerializer())
@@ -40,7 +43,7 @@ public class Client {
         in = new Input();
         out = new Output();
         logger = Logger.getLogger(Client.class.getName());
-        LoggerSetup.setupLogger(logger, "client" + File.separator + LocalDate.now() + "_log.log");
+        logger.setLevel(Level.SEVERE);
     }
 
     public Input getIn() {
@@ -64,7 +67,7 @@ public class Client {
     public boolean connect() throws IOException {
         socket = new DatagramSocket();
         socket.connect(inetSocketAddress);
-        socket.setSoTimeout(1000);
+        socket.setSoTimeout(100);
         logger.finest("Соединение установлено.");
         return true;
     }
@@ -97,9 +100,15 @@ public class Client {
     public void get(String input) {
         try {
             buffer.clear();
-            Request request = new Request(input, in, out);
+            Request request = new Request(user, input, in, out);
 
-            if (request.getCommandName() != null && request.getCommandName().equals("exit")) {
+            if (request.getCommandName() != null
+                    && request.getCommandName().equals(CommandNames.LOGIN)) {
+                out.println("Данные сохранены.");
+                return;
+            }
+
+            if (request.getCommandName() != null && request.getCommandName().equals(CommandNames.EXIT)) {
                 out.println("Завершение работы.");
                 logger.fine("Закрытие соединения");
                 socket.close();
@@ -127,7 +136,6 @@ public class Client {
                     "Данные клиента: " + request.getCommandName() + " " + request.getCommandParameter());
             logger.info(response.getString());
         } catch (SocketTimeoutException e) {
-            out.print("\rРазрыв соедиенения, ожидание подключения...");
             close();
         } catch (IOException e) {
             logger.severe("Ошибка. Закрытие соединения");

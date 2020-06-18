@@ -2,14 +2,12 @@ package com.lab.server;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.lab.common.LoggerSetup;
 import com.lab.common.adapters.LocalDateDeserializer;
 import com.lab.common.adapters.LocalDateSerializer;
 import com.lab.common.exchange.Request;
 import com.lab.common.exchange.Response;
 import com.lab.server.executor.Executor;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
@@ -55,7 +53,6 @@ public class Server {
 
         this.executor = new Executor(dbUser, dbPassword);
         logger = Logger.getLogger(Server.class.getName());
-        LoggerSetup.setupLogger(logger, "server" + File.separator + LocalDate.now() + "_log.log");
     }
 
     public Executor getExecutor() {
@@ -99,6 +96,7 @@ public class Server {
         }
 
         Request request;
+
         try {
             request = futureRequest.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -131,6 +129,7 @@ public class Server {
         }
 
         Response response;
+
         try {
             response = futureResponse.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -150,6 +149,7 @@ public class Server {
                                 gson.toJson(new Response(response.isCorrect(), "Ответ от сервера слишком большой."))
                                         .getBytes());
                     }
+
                     buffer.flip();
                     DatagramPacket sendPacket =
                             new DatagramPacket(

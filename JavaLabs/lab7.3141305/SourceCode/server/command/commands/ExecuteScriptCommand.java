@@ -1,5 +1,7 @@
 package com.lab.server.command.commands;
 
+import com.lab.common.CommandNames;
+import com.lab.common.CommandUtils;
 import com.lab.common.exchange.Response;
 import com.lab.common.io.Input;
 import com.lab.common.user.User;
@@ -59,7 +61,9 @@ public final class ExecuteScriptCommand extends Command {
         if (editor.getFilesHashes().contains(file.getName().hashCode())) {
             return new Response(
                     false,
-                    "Скрипт уже исполнялся. Введите clear_files_history для очистки истории исполненных файлов со скриптами");
+                    "Скрипт уже исполнялся. Введите "
+                            + CommandNames.CLEAR_FILES_HISTORY
+                            + " для очистки истории исполненных файлов со скриптами");
         } else editor.getFilesHashes().add(file.getName().hashCode());
         editor.setIn(in);
 
@@ -67,9 +71,14 @@ public final class ExecuteScriptCommand extends Command {
         editor.getExecutor().getEditor().update(editor);
 
         List<String> response = new ArrayList<>();
-        for (String command = in.readLine(); command != null; command = in.readLine()) {
+        for (String input = in.readLine(); input != null; input = in.readLine()) {
             editor.getExecutor().getEditor().setFromFile(true);
-            response.addAll(editor.getExecutor().executeCommand(command, user).getResponse());
+
+            String commandName = CommandUtils.getCommandName(input);
+            String commandParameter = CommandUtils.getCommandArgument(input);
+
+            response.addAll(
+                    editor.getExecutor().executeCommand(commandName, commandParameter, user).getResponse());
         }
 
         editor.update(editor.getExecutor().getEditor());

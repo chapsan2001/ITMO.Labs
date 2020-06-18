@@ -1,5 +1,7 @@
 package com.lab.common.exchange;
 
+import com.lab.common.CommandNames;
+import com.lab.common.CommandUtils;
 import com.lab.common.io.Input;
 import com.lab.common.io.Output;
 import com.lab.common.musicBand.MusicBand;
@@ -8,74 +10,38 @@ import com.lab.common.user.User;
 import com.lab.common.user.UserCreator;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Request implements Serializable {
-    private String commandName;
+    private final String commandName;
+    private final String commandParameter;
+    private final User user;
     private MusicBand musicBand;
-    private String commandParameter;
-    private User user;
 
-    public Request(String input, Input in, Output out) {
-        user = new User();
+    public Request(User user, String input, Input in, Output out) {
+        this.user = user;
 
-        if (input == null || input.isEmpty()) {
+        if (input == null) {
             commandName = null;
             commandParameter = null;
         } else {
-            List<String> values = getSubStrings(input);
-            try {
-                if (values.size() > 0) {
-                    commandName = values.get(0).trim();
-                    if (values.size() == 3) {
-                        user.setLogin(values.get(1).trim());
-                        user.setPassword(values.get(2).trim());
-                    } else {
-                        commandParameter = values.get(1).trim();
-                        user.setLogin(values.get(2).trim());
-                        user.setPassword(values.get(3).trim());
-                    }
-                }
-            } catch (IndexOutOfBoundsException | NullPointerException e) {
-                // If user decided not to input some values.
-            }
+            commandName = CommandUtils.getCommandName(input);
+            commandParameter = CommandUtils.getCommandArgument(input);
 
             if (commandName != null) {
-                if (commandName.equals("insert_key")
-                        || commandName.equals("update_id")
-                        || commandName.equals("replace_if_lower")) {
-                    musicBand = new MusicBandCreator(in, out).create();
-                }
-
-                if (commandName.equals("register")) {
-                    user = new UserCreator(in, out).create();
+                if (commandName.equals(CommandNames.INSERT_KEY)
+                        || commandName.equals(CommandNames.UPDATE_ID)
+                        || commandName.equals(CommandNames.REPLACE_IF_LOWER)) {
+                    this.musicBand = new MusicBandCreator(in, out).create();
+                } else if (commandName.equals(CommandNames.REGISTER)
+                        || commandName.equals(CommandNames.LOGIN)) {
+                    User newUser = new UserCreator(in, out).create();
+                    if (newUser != null) {
+                        this.user.setLogin(newUser.getLogin());
+                        this.user.setPassword(newUser.getPassword());
+                    }
                 }
             }
         }
-    }
-
-    private List<String> getSubStrings(String userInput) {
-        List<String> matchList = new ArrayList<>();
-        Matcher regexMatcher = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'").matcher(userInput);
-
-        while (regexMatcher.find()) {
-            if (regexMatcher.group(1) != null) {
-                matchList.add(regexMatcher.group(1));
-            } else if (regexMatcher.group(2) != null) {
-                matchList.add(regexMatcher.group(2));
-            } else {
-                matchList.add(regexMatcher.group());
-            }
-        }
-
-        return matchList;
-    }
-
-    public User getUser() {
-        return user;
     }
 
     public String getCommandName() {
@@ -84,6 +50,10 @@ public class Request implements Serializable {
 
     public String getCommandParameter() {
         return commandParameter;
+    }
+
+    public User getUser() {
+        return user;
     }
 
     public MusicBand getMusicBand() {

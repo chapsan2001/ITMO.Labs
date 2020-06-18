@@ -1,11 +1,13 @@
 package com.lab.server.executor;
 
+import com.lab.common.CommandNames;
 import com.lab.common.exchange.Request;
 import com.lab.common.exchange.Response;
 import com.lab.common.user.User;
 import com.lab.common.user.hashGenerator.exceptions.HashGeneratorException;
 import com.lab.server.command.Command;
 import com.lab.server.command.Commands;
+import com.lab.server.command.commands.NotLoggedInHelpCommand;
 import com.lab.server.command.factory.CommandFactory;
 import com.lab.server.command.factory.CommandFactoryException;
 import com.lab.server.storage.dataSource.DataSource;
@@ -31,11 +33,18 @@ public final class Executor {
         return dataSource;
     }
 
+    public Editor getEditor() {
+        return editor;
+    }
+
+    public Commands getCommands() {
+        return commands;
+    }
+
     private Response authenticateUser(User user) {
-        if (user.getLogin() == null) {
+        if (user == null || user.getLogin() == null || user.getPassword() == null) {
             return new Response(
-                    false,
-                    "Данные пользователя не найдены. Введите логин и пароль после аргументов команды.");
+                    false, "Данные пользователя не найдены. Для авторизации используйте команду login.");
         }
 
         User findUser = editor.getUserDAO().getByLogin(user.getLogin());
@@ -47,13 +56,23 @@ public final class Executor {
         }
 
         try {
-            if (!findUser
-                    .getPassword()
-                    .equals(editor.getHashGenerator().generateHashWithPepperAndSalt(user.getPassword()))) {
-                return new Response(false, "Неверный пароль пользователя");
-            }
+            String s =
+                    editor
+                            .getHashGenerator()
+                            .generateHashWithPepperAndSalt(user.getPassword()); // TODO: Debug.
         } catch (HashGeneratorException e) {
-            return new Response(false, "Внутрення ошибка аутентификации");
+            e.printStackTrace();
+        }
+
+        String hashedPassword;
+        try {
+            hashedPassword = editor.getHashGenerator().generateHashWithPepperAndSalt(user.getPassword());
+        } catch (HashGeneratorException e) {
+            return new Response(false, "Внутрення ошибка аутентификации.");
+        }
+
+        if (!findUser.getPassword().equals(hashedPassword)) {
+            return new Response(false, "Неверный пароль пользователя.");
         }
 
         user.setId(findUser.getId());
@@ -61,114 +80,69 @@ public final class Executor {
     }
 
     /**
-     * Returns editor
+     * Executes command using name, parameter, and user.
      *
-     * @return Editor
+     * @param command         concrete command.
+     * @param commandArgument command argument.
+     * @param user            concrete user.
+     * @return Response from execution.
      */
-    public Editor getEditor() {
-        return editor;
-    }
-
-    public Commands getCommands() {
-        return commands;
-    }
-
-    /**
-     * Executes command by its name
-     *
-     * @param command command name to be executed
-     * @param user    concrete user
-     * @return Response
-     */
-    public Response executeCommand(String command, User user) {
-        editor.setValue(null);
-        String commandName;
-
-        if (command == null) {
+    public Response executeCommand(String command, String commandArgument, User user) {
+        if (command == null || !commands.getCommands().containsKey(command)) {
             return new Response(
-                    false, "Неверная команда. Введите help для отображения списка доступных команд.");
-        } else {
-            String[] commandAndValue = command.split(" ", 2);
-            commandName = commandAndValue[0];
-            if (commandAndValue.length == 2) {
-                editor.setValue(commandAndValue[1]);
-            }
+                    false,
+                    "Неверная команда. Введите "
+                            + CommandNames.HELP
+                            + " для отображения списка доступных команд.");
         }
 
-        if (!command.equals("register") && !command.equals("help")) {
-            Response authenticationResponse = authenticateUser(user);
+        Response authenticationResponse = authenticateUser(user);
+
+        if (!command.equals(CommandNames.REGISTER)) {
+            if (!authenticationResponse.isCorrect() && command.equals(CommandNames.HELP)) {
+                return new NotLoggedInHelpCommand(user, editor).execute();
+            }
+
             if (!authenticationResponse.isCorrect()) {
                 return authenticationResponse;
             }
         }
 
+        editor.setValue(commandArgument);
+
         Command com;
 
         try {
-            if (!commands.getCommands().containsKey(commandName)) {
-                return new Response(
-                        false, "Неверная команда. Введите help для отображения списка доступных команд.");
-            }
-
-            com = commandFactory.createCommand(commandName, user);
+            com = commandFactory.createCommand(command, user);
         } catch (CommandFactoryException e) {
             return new Response(false, "Ошибка создания команды");
         }
 
-        return executeCom(com, command);
+        Response commandResponse = com.execute();
+
+        if (commandResponse.isCorrect()) {
+            editor.getCommandHistory().addCommand(command);
+        }
+
+        return new Response(true, commandResponse.getResponse());
     }
 
     /**
-     * Executes command by its name
+     * Executes command by request.
      *
      * @param request request with command name to be executed
      * @return Response
      */
     public Response executeCommand(Request request) {
-        if (request.getCommandName() == null) {
+        if (request == null) {
             return new Response(
-                    false, "Неверная команда. Введите help для отображения списка доступных команд.");
+                    false,
+                    "Неверная команда. Введите "
+                            + CommandNames.HELP
+                            + " для отображения списка доступных команд.");
         }
 
-        if (!request.getCommandName().equals("register") && !request.getCommandName().equals("help")) {
-            Response authenticationResponse = authenticateUser(request.getUser());
-            if (!authenticationResponse.isCorrect()) {
-                return authenticationResponse;
-            }
-        }
-
-        String commandName = request.getCommandName();
-
-        editor.setValue(request.getCommandParameter());
-
-        Command com;
-
-        try {
-            if (!commands.getCommands().containsKey(request.getCommandName())) {
-                return new Response(
-                        false, "Неверная команда. Введите help для отображения списка доступных команд.");
-            }
-
-            com = commandFactory.createCommand(request.getCommandName(), request.getUser());
-        } catch (CommandFactoryException e) {
-            return new Response(false, "Ошибка создания команды");
-        }
-
-        return executeCom(com, commandName);
-    }
-
-    /**
-     * Execute command if it is not null
-     *
-     * @param com command to execute
-     * @return Response
-     */
-    private Response executeCom(Command com, String commandName) {
-        Response commandResponse;
-        commandResponse = com.execute();
-        if (commandResponse.isCorrect()) {
-            editor.getCommandHistory().addCommand(commandName);
-        }
-        return new Response(true, commandResponse.getResponse());
+        return executeCommand(
+                request.getCommandName(), request.getCommandParameter(), request.getUser());
     }
 }
