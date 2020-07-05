@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="418.0" prefWidth="352.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.lab.client.gui.NewMusicBandController">
+    <children>
+        <GridPane layoutX="14.0" layoutY="14.0" prefHeight="391.0" prefWidth="312.0">
+            <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="230.0" minWidth="10.0" prefWidth="230.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="254.0" minWidth="10.0" prefWidth="218.0" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="33.0" minHeight="10.0" prefHeight="21.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="57.0" minHeight="10.0" prefHeight="27.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="68.0" minHeight="10.0" prefHeight="32.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="123.0" minHeight="10.0" prefHeight="29.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="144.0" minHeight="0.0" prefHeight="37.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="155.0" minHeight="0.0" prefHeight="36.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="155.0" minHeight="10.0" prefHeight="38.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="155.0" minHeight="10.0" prefHeight="38.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <children>
+                <Label fx:id="nameLabel" text="Name:" />
+                <Label fx:id="coordinatesXLabel" text="X:" GridPane.rowIndex="1" />
+                <Label fx:id="coordinatesYLabel" text="Y:" GridPane.rowIndex="2" />
+                <Label fx:id="numberOfParticipantsLabel" text="Number of participants:" GridPane.rowIndex="3" />
+                <Label fx:id="genreLabel" prefHeight="27.0" prefWidth="230.0" text="Music genre: " GridPane.rowIndex="4" />
+                <Label fx:id="albumNameLabel" text="Album name" GridPane.rowIndex="5" />
+                <Label fx:id="albumTracksLabel" text="Number of tracks" GridPane.rowIndex="6" />
+                <Label fx:id="albumSalesLabel" text="Number of sales" GridPane.rowIndex="7" />
+                <TextField fx:id="nameTextField" prefWidth="185.0" GridPane.columnIndex="1" />
+                <TextField fx:id="coordinatesXTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <TextField fx:id="coordinatesYTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                <TextField fx:id="numberOfParticipantsTextField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                <TextField fx:id="albumNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                <TextField fx:id="albumTracksTextField" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                <TextField fx:id="albumSalesTextField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                <Button fx:id="okButton" mnemonicParsing="false" onAction="#onOK" prefHeight="27.0" prefWidth="100.0" text="OK" GridPane.halignment="RIGHT" GridPane.rowIndex="8" GridPane.valignment="CENTER">
+                    <GridPane.margin>
+                        <Insets left="50.0" />
+                    </GridPane.margin>
+                </Button>
+                <Button mnemonicParsing="false" onAction="#onCancel" prefHeight="27.0" prefWidth="308.0" text="Cancel" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="8" GridPane.valignment="CENTER">
+                    <GridPane.margin>
+                        <Insets />
+                    </GridPane.margin>
+                </Button>
+            <ComboBox fx:id="genreComboBox" prefHeight="27.0" prefWidth="263.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            </children>
+        </GridPane>
+    </children>
+</AnchorPane>
