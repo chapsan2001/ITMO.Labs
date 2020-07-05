@@ -11,7 +11,8 @@ Java labs are done using **IntelliJ IDEA** by *JetBrains*.
 - Spring semester 2020
   - Collection managment application lab - 9/10 points;
   - Client-server architecture lab - 8/10 points;
-  - Database lab - TBD.
+  - Database lab - TBD;
+  - GUI lab (JavaFX) - TBD.
   
 Points for Java labs were given mostly for theory knowledge, tecnical completion costs only 0.01 points.
 
@@ -27,6 +28,6 @@ Tasks can be found at https://books.ifmo.ru/file/pdf/2256.pdf
 
 **ATTENTION!** Python labs contain some unnoticed mistakes. I didn't have time to find and fix them,
 but I still got a lot of points for them, because the teacher didn't even ask me anything about the labs
-and gave me nearly maximum points, so now I have no desire to fix them :)
+and gave me nearly maximum points, so now I have no desire to fix them, because I like Java more than Python :)
 
 As long as I'm studying at the university, new laboratory works will be uploaded.
