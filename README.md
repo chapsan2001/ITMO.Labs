@@ -11,8 +11,8 @@ Java labs are done using **IntelliJ IDEA** by *JetBrains*.
 - Spring semester 2020
   - Collection managment application lab - 9/10 points;
   - Client-server architecture lab - 8/10 points;
-  - Database lab - TBD;
-  - GUI lab (JavaFX) - TBD.
+  - Database lab - 8.5/10;
+  - GUI lab (JavaFX) - 8/10.
   
 Points for Java labs were given mostly for theory knowledge, tecnical completion costs only 0.01 points.
 
